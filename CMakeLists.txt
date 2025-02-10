@@ -117,6 +117,26 @@ set_target_properties(loguru
     DEBUG_POSTFIX "d"
 )
 
+if (NOT DEFINED {LOGURU_EXPORT} AND BUILD_SHARED_LIBS)
+  if (UNIX)
+    set(LOGURU_EXPORT "__attribute__((visibility(\"default\")))")
+  else()
+    set(LOGURU_EXPORT "__declspec(dllexport)")
+  endif()
+  target_compile_definitions(loguru
+    PRIVATE
+      LOGURU_EXPORT=${LOGURU_EXPORT}
+  )
+endif()
+
+if (BUILD_SHARED_LIBS)
+  target_compile_definitions(loguru
+    PUBLIC
+      LOGURU_BUILDING_DLL=1
+  )
+endif()
+
+
 target_compile_definitions(loguru
   # NOTE: these generator expressions are dense but the logic is quite simple!
   #       if any of the cache variables are not equal to the empty string, set them as a definition.

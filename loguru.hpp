@@ -111,8 +111,21 @@ Website: www.ilikebigbits.com
 // ----------------------------------------------------------------------------
 
 #ifndef LOGURU_EXPORT
-	// Define to your project's export declaration if needed for use in a shared library.
-	#define LOGURU_EXPORT
+	#if defined(_WIN32)
+		#if defined(LOGURU_BUILDING_DLL)
+			#if defined(loguru_EXPORTS)
+				#define LOGURU_EXPORT __declspec(dllexport)
+			#else
+				#define LOGURU_EXPORT __declspec(dllimport)
+			#endif
+		#else
+			#define LOGURU_EXPORT
+		#endif
+	#elif defined(__unix__)
+		#define LOGURU_EXPORT __attribute__((visibility("default")))
+	#else
+		#define LOGURU_EXPORT
+	#endif
 #endif
 
 #ifndef LOGURU_SCOPE_TEXT_SIZE

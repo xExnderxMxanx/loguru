@@ -53,6 +53,7 @@
 #ifdef _WIN32
 	#include <direct.h>
 
+    #include <share.h>
 	#define localtime_r(a, b) localtime_s(b, a) // No localtime_r with MSVC, but arguments are swapped for localtime_s
 #else
 	#include <signal.h>
@@ -127,7 +128,10 @@
 		#define _WIN32_WINNT 0x0502
 	#endif
 	#define WIN32_LEAN_AND_MEAN
-	#define NOMINMAX
+
+    #ifndef NOMINMAX
+        #define NOMINMAX
+    #endif
 	#include <windows.h>
 #endif
 
@@ -423,7 +427,7 @@ namespace loguru
 #ifdef _WIN32
 		int bytes_needed = _vscprintf(format, vlist);
 		CHECK_F(bytes_needed >= 0, "Bad string format: '%s'", format);
-		char* buff = (char*)malloc(bytes_needed+1);
+		char* buff = new char[bytes_needed + 1];
 		vsnprintf(buff, bytes_needed+1, format, vlist);
 		return Text(buff);
 #else
@@ -1034,7 +1038,7 @@ namespace loguru
 	// Where we store the custom thread name set by `set_thread_name`
 	char* thread_name_buffer()
 	{
-		__declspec( thread ) static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+		thread_local static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
 		return &thread_name[0];
 	}
 #endif // LOGURU_WINTHREADS
@@ -1325,7 +1329,10 @@ namespace loguru
 		if (custom_level_name) {
 			snprintf(level_buff, sizeof(level_buff) - 1, "%s", custom_level_name);
 		} else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat"
 			snprintf(level_buff, sizeof(level_buff) - 1, "% 4d", static_cast<int8_t>(verbosity));
+#pragma clang diagnostic pop
 		}
 
 		size_t pos = 0;
